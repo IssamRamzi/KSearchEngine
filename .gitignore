@@ -1,0 +1,7 @@
+/.vs
+/build
+/cmake-build-debug
+/out
+./"Basic Local Search Engine.md"
+./notes.md
+./todos.md
