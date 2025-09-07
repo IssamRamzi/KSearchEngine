@@ -2,6 +2,7 @@
 /build
 /cmake-build-debug
 /out
-./"Basic Local Search Engine.md"
-./notes.md
-./todos.md
+.idea
+notes.md
+todos.md
+Basic Local Search Engine.md
