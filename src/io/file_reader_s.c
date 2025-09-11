@@ -1,28 +1,57 @@
-//
-// Created by issbe on 29/08/2025.
-//
-
-#ifndef FILEREADER_H
-#define FILEREADER_H
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <locale.h>
 #include <ctype.h>
+#include "io/file_reader_s.h"
+#include "core/utils.h"
 
-#include "dict_s.h"
+FILE* init(char path[]) {
+    if (fr != NULL) {
+        fclose(fr->file);
+        free(fr->mot);
+        free(fr);
+    }
 
+    fr = malloc(sizeof(file_reader));
+    if (!fr) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
 
-typedef struct {
-    FILE* file;
-    char* mot;
-    char c;
-} file_reader;
+    fr->file = fopen(path, "r");
+    if (fr->file == NULL) {
+        printf("Failed to open: %s\n", path);
+        free(fr);
+        return NULL;
+    }
 
-static file_reader* fr = NULL;
+    fr->mot = malloc(MAX_WORD_SIZE);
+    if (!fr->mot) {
+        perror("malloc");
+        fclose(fr->file);
+        free(fr);
+        exit(EXIT_FAILURE);
+    }
+    fr->c = '\0';
+    return fr->file;
+}
 
-extern bool is_letter(char c);
+void start() {
+    fr->c = fgetc(fr->file);
+    while (fr->c != EOF && !isalpha((unsigned char)fr->c)) {
+        fr->c = fgetc(fr->file);
+    }
+}
+
+void advance() {
+    int i = 0;
+    fr->mot[0] = '\0';
+    while (fr->c != EOF && isalpha((unsigned char)fr->c) && i < MAX_WORD_SIZE - 1) {
+        fr->mot[i++] = (char)tolower((unsigned char)fr->c);
+        fr->c = fgetc(fr->file);
+    }
+    fr->mot[i] = '\0';
+}
 
 char* fr_read(char path[]) {
     FILE *file = fopen(path, "r");
@@ -48,55 +77,6 @@ char* fr_read(char path[]) {
     return content;
 }
 
-FILE* init(char path[]) {
-    if (fr != NULL) {
-        fclose(fr->file);
-        free(fr->mot);
-        free(fr);
-    }
-
-    fr = malloc(sizeof(file_reader));
-    if (!fr) {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
-
-    fr->file = fopen(path, "r");
-    if (fr->file == NULL) {
-        printf("%s\n",path);
-        //perror("opening file");
-        // exit(EXIT_FAILURE);
-        return NULL;
-    }
-
-    fr->mot = malloc(MAX_WORD_SIZE);
-    if (!fr->mot) {
-        perror("malloc");
-        fclose(fr->file);
-        free(fr);
-        exit(EXIT_FAILURE);
-    }
-    fr->c = '\0';
-    return fr->file;
-}
-
-void start() {
-    fr->c = fgetc(fr->file);
-    while (fr->c != EOF && !is_letter(fr->c)) {
-        fr->c = fgetc(fr->file);
-    }
-}
-
-void advance() {
-    int i = 0;
-    fr->mot[0] = '\0';
-    while (fr->c != EOF && is_letter(fr->c)) {
-        fr->mot[i++] = (char)tolower(fr->c);
-        fr->c = fgetc(fr->file);
-    }
-    fr->mot[i] = '\0';
-}
-
 void fr_append_to_dict_s(char path[], dict_s *word_d) {
     if (init(path) == NULL) return;
     start();
@@ -104,9 +84,10 @@ void fr_append_to_dict_s(char path[], dict_s *word_d) {
     while (fr->c != EOF) {
         advance();
         if (strlen(fr->mot) > 0) {
+            // printf("Adding word: '%s' from pos %ld\n", fr->mot, ftell(fr->file));
             dict_s_add_word(word_d, fr->mot, true);
         }
-        while (fr->c != EOF && !is_letter(fr->c)) {
+        while (fr->c != EOF && !isalpha((unsigned char)fr->c)) {
             fr->c = fgetc(fr->file);
         }
     }
@@ -118,26 +99,23 @@ void fr_append_to_dict_s(char path[], dict_s *word_d) {
 }
 
 void fr_append_to_dict_h(char path[], dict_h *word_d) {
-    init(path);
+    if (init(path) == NULL) return;
     start();
 
     while (fr->c != EOF) {
         advance();
         if (strlen(fr->mot) > 0) {
+            // printf("Adding word: '%s' from pos %ld\n", fr->mot, ftell(fr->file));
             dict_h_add_word(word_d, fr->mot, true);
         }
-        while (fr->c != EOF && !is_letter(fr->c)) {
+        while (fr->c != EOF && !isalpha((unsigned char)fr->c)) {
             fr->c = fgetc(fr->file);
         }
     }
+
     fclose(fr->file);
-    // snprintf(fr->mot, MAX_WORD_SIZE, "\0");
-    //snprintf(fr->mot, MAX_WORD_SIZE, "");
-    //free(fr->mot);
-
+    free(fr->mot);
     free(fr);
-
     fr = NULL;
 }
 
-#endif // FILEREADER_H

@@ -7,24 +7,28 @@ project(KSearchEngine C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(KSearchEngine main.c
-        src/include/file_reader_s.h
-        src/include/dict_s.h
-        src/dict_s.c
-        src/include/dir_s.h
-        src/dir_s.c
-        src/include/hash_table.h
-        src/hash_table.c
-        src/include/dict_h.h
-        src/dict_h.c
-        src/include/dir_h.h
-        src/dir_h.c
-        src/include/utils.h
-        src/include/cell.h
-        src/include/index_matrix.h
-        src/index_matrix.c
-        src/include/include.h
-        src/utils.c
-        src/cell.c)
+include_directories(include)
+add_executable(KSearchEngine src/main.c
+        include/io/file_reader_s.h
+        include/data/dict_s.h
+        src/data/dict_s.c
+        include/io/dir_s.h
+        src/io/dir_s.c
+        include/data/hash_table.h
+        src/data/hash_table.c
+        include/data/dict_h.h
+        src/data/dict_h.c
+        include/io/dir_h.h
+        src/io/dir_h.c
+        include/core/utils.h
+        include/data/cell.h
+        include/data/index_matrix.h
+        src/data/index_matrix.c
+        src/core/utils.c
+        src/data/cell.c
+        include/core/logger.h
+        src/core/logger.c
+        src/core/indexation.c
+        include/core/indexation.h
+        src/io/file_reader_s.c)
 
-include_directories(src/include)

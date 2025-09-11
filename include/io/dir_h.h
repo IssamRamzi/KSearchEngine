@@ -6,7 +6,7 @@
 #define DIR_H_H
 #include <pthread.h>
 
-#include "dict_h.h"
+#include "../data/dict_h.h"
 
 struct dir_h {
     dict_h *files_dict;
@@ -18,11 +18,12 @@ typedef struct dir_h dir_h;
 typedef struct  {
     char path[MAX_WORD_SIZE];
     dict_h *dict;
+    bool check;
 }search_thread_args_h;
 
 dir_h* dir_h_create(char path[MAX_WORD_SIZE]);
-void dir_h_get_files(dir_h* d, char path[MAX_WORD_SIZE]);
-void dir_h_get_files_wt(dir_h* d, char path[MAX_WORD_SIZE]);
+void dir_h_get_files(dir_h* d, char path[MAX_WORD_SIZE], bool check);
+void dir_h_get_files_wt(dir_h* d, char path[MAX_WORD_SIZE], bool check);
 void dir_h_destroy(dir_h*);
 
 

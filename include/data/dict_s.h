@@ -21,4 +21,5 @@ void        dict_s_destroy(dict_s* d);
 
 void        dict_s_display(dict_s* d, char* end);
 void        dict_s_save(dict_s* d, char* end, char* path);
+dict_s*     dict_s_load(char* end, char* path, bool check);
 #endif //DICT_S_H

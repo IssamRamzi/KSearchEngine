@@ -1,4 +1,4 @@
-#include "cell.h"
+#include "data/cell.h"
 
 cell_t *cell_create(void* value, int index, struct cell *next, DATA_TYPE type) {
     cell_t* cell = malloc(sizeof(cell_t));
@@ -12,10 +12,10 @@ cell_t *cell_create(void* value, int index, struct cell *next, DATA_TYPE type) {
     
     switch (cell->cell_type) {
         case INTEGER:
-            cell->value.val_i = *(int*)value;  // Fix: dereference the pointer
+            cell->value.val_i = *(int*)value;
             break;
         case FLOAT:
-            cell->value.val_f = *(double*)value;  // Fix: dereference the pointer
+            cell->value.val_f = *(double*)value;
             break;
         case STRING:
             strncpy(cell->value.val_s, (char*)value, MAX_WORD_SIZE - 1);

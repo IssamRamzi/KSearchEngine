@@ -4,7 +4,7 @@
 //
 // Created by issbe on 29/08/2025.
 //
-#include "include/dict_h.h"
+#include "data/dict_h.h"
 
 #include <pthread.h>
 #include <stdio.h>
@@ -93,6 +93,8 @@ void dict_h_write(dict_h* d, char* end, int max) {
 
 void dict_h_save(dict_h* d, char* end, char* path) {
     FILE* f = fopen(path, "w");
+    fprintf(f, "%d\n", d->nodes_count , end);
+
     for (int i = 0; i < d->nodes_count; i++) {
         hash_node_s* node = d->nodes[i];
         while (node) {
@@ -100,5 +102,34 @@ void dict_h_save(dict_h* d, char* end, char* path) {
             node = node->next;
         }
     }
+    printf("Saved !\n");
     fclose(f);
+}
+
+dict_h* dict_h_load(char* end, char* path){
+    clock_t start_time = clock(), end_time;
+    if (!path) return;
+
+    FILE* f = fopen(path, "r");
+
+    if (f == NULL) {
+        perror("dict_s_load: failed to open file");
+        return;
+    }
+
+    char buffer[MAX_WORD_SIZE];
+    fgets(buffer, MAX_WORD_SIZE, f);
+    char *endptr;
+
+    long maxsize = strtol(buffer, &endptr, 10); // str_int, endptr, base
+    dict_h* d = dict_h_create((int)maxsize);
+    printf("Loading dict_s with a maxsize of %d\n",maxsize);
+
+    while (fgets(buffer, MAX_WORD_SIZE, f) != NULL) {
+        dict_h_add_word(d, buffer, false);
+    }
+    end_time = clock();
+    printf("Takes %ldms to load the dict_h and its size is %d\n",(end_time - start_time) * 1000 / CLOCKS_PER_SEC, d->size);
+    fclose(f);
+    return d;
 }

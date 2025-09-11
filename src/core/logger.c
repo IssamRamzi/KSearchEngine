@@ -1,29 +1,9 @@
 //
-// Created by issbe on 17/08/2025.
+// Created by issbe on 08/09/2025.
 //
-#pragma once
+#include "core/logger.h"
 
-#ifndef LOGGER_H
-#define LOGGER_H
-
-#include <stdio.h>
-#include <time.h>
-
-#define MAX_LOG_SIZE 2048
-
-typedef enum  {
-    DEBUG,
-    INFO,
-    ERROR,
-    WARNING
-} LOG_LEVEL;
-
-typedef struct {
-    FILE* file;
-} Logger;
-
-static Logger logger;
-
+#include <stdlib.h>
 
 char* get_string_log_level(LOG_LEVEL level) {
     switch (level) {
@@ -52,11 +32,9 @@ void log_(LOG_LEVEL level, char* message) {
              "%Y-%m-%d %H:%M:%S", timeinfo);
     char* result = malloc(sizeof(char) * MAX_LOG_SIZE);
     snprintf(result, MAX_LOG_SIZE, "[ %s ] - %s : %s\n", timestamp, get_string_log_level(level), message);
-    if (logger.file)
-        printf("%s", message);
+    printf("%s", message);
+    if (logger.file) {
         fprintf(logger.file, message);
+    }
+    free(result);
 }
-
-
-
-#endif //LOGGER_H

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "dict_s.h"
-#include "utils.h"
+#include "../core/utils.h"
 
 typedef struct cell{
     union content{
@@ -17,7 +17,7 @@ typedef struct cell{
     struct cell *next;
 } cell_t;
 
-// Declare functions but don't define them in header
+
 cell_t *cell_create(void* value, int index, struct cell *next, DATA_TYPE type);
 void cell_free(cell_t *cell);
 void cell_print(cell_t* cell);

@@ -1,4 +1,4 @@
-#include "dict_s.h"  // Chemin corrigé
+#include "data/dict_s.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,7 +26,7 @@ dict_s* dict_s_create(int max_dict_size) {
         dict->dict[i] = malloc(sizeof(char) * MAX_WORD_SIZE);
         if (!dict->dict[i]) {
             perror("dict_s_create: malloc failed for word");
-            // Cleanup already allocated memory
+
             for (int j = 0; j < i; j++) {
                 free(dict->dict[j]);
             }
@@ -95,7 +95,7 @@ int dict_s_get_index(dict_s* d, char word[MAX_WORD_SIZE]) {
 }
 
 void dict_s_destroy(dict_s* d) {
-    if (!d) return;
+    if (d == NULL) return;
 
     for (int i = 0; i < d->max_size; i++) {
         free(d->dict[i]);
@@ -120,8 +120,38 @@ void dict_s_save(dict_s* d, char* end, char* path) {
         perror("dict_s_save: failed to open file");
         return;
     }
+    fprintf(f, "%d\n", d->size);
     for (int i = 0; i < d->size; i++) {
         fprintf(f, "%s%s", d->dict[i], end ? end : "");
     }
+    printf("dict_s_save done\n");
     fclose(f);
+}
+
+dict_s* dict_s_load(char* end, char* path, bool check) {
+    clock_t start_time = clock(), end_time;
+    if (!path) return;
+
+    FILE* f = fopen(path, "r");
+
+    if (f == NULL) {
+        perror("dict_s_load: failed to open file");
+        return;
+    }
+
+    char buffer[MAX_WORD_SIZE];
+    fgets(buffer, MAX_WORD_SIZE, f);
+    char *endptr;
+
+    long size = strtol(buffer, &endptr, 10); // str_int, endptr, base
+    dict_s* d = dict_s_create((int)size);
+    printf("Loading dict_s with a size of %d\n",size);
+
+    while (fgets(buffer, MAX_WORD_SIZE, f) != NULL) {
+        dict_s_add_word(d, buffer, check);
+    }
+    end_time = clock();
+    printf("Takes %ldms to load the dict_s and its size is %d\n",(end_time - start_time) * 1000 / CLOCKS_PER_SEC, d->size);
+    fclose(f);
+    return d;
 }

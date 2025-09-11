@@ -1,7 +1,7 @@
 //
 // Created by issbe on 01/09/2025.
 //
-#include "include/hash_table.h"
+#include "data/hash_table.h"
 
 unsigned int hash_code(char* str, int nodes_count) {
     unsigned int hash = 5381;

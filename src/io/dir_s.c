@@ -1,9 +1,9 @@
 //
 // Created by issbe on 29/08/2025.
 //
-#include "include/dir_s.h"
+#include "io/dir_s.h"
 
-#include "utils.h"
+#include "core/utils.h"
 
 
 dir_s* dir_s_create(char path[MAX_WORD_SIZE]){

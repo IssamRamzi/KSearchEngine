@@ -1,7 +1,7 @@
 //
 // Created by issbe on 07/09/2025.
 //
-#include "index_matrix.h"
+#include "data/index_matrix.h"
 
 #include <string.h>
 
@@ -77,6 +77,7 @@ index_matrix *matrix_load(char *path) {
             cell_t *cell = cell_create(value, idx, NULL, FLOAT);
         }
     }
+    return matrix;
 }
 
 void matrix_save(index_matrix *matrix, char *path) {

@@ -2,7 +2,7 @@
 #define DIR_S_H
 
 #include <stdio.h>
-#include "dict_s.h"
+#include "../data/dict_s.h"
 #include <dirent.h>
 #include <pthread.h>
 #include <stdlib.h>

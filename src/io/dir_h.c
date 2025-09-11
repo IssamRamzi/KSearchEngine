@@ -1,7 +1,7 @@
 //
 // Created by issbe on 02/09/2025.
 //
-#include "dir_h.h"
+#include "io/dir_h.h"
 
 #include <dirent.h>
 #include <stdio.h>
@@ -27,7 +27,7 @@ dir_h* dir_h_create(char path[MAX_WORD_SIZE]) {
 
 
 
-void dir_h_get_files(dir_h* d, char path[MAX_WORD_SIZE]) {
+void dir_h_get_files(dir_h* d, char path[MAX_WORD_SIZE], bool check) {
     DIR* dir = opendir(path);
     if (dir == NULL) {
         printf("failed to open folder `%s`.\n", path);
@@ -48,7 +48,7 @@ void dir_h_get_files(dir_h* d, char path[MAX_WORD_SIZE]) {
 
         } else {
             // printf("DIR : %s\n", full_path);
-            dir_h_get_files(d, full_path);
+            dir_h_get_files(d, full_path, check);
         }
     }
     closedir(dir);
@@ -58,13 +58,13 @@ void *dir_h_get_files_thread(void *arg) {
     search_thread_args_h *thread_args = (search_thread_args_h *)arg;
     dir_h *d = (dir_h*)thread_args->dict;
     char *path = thread_args->path;
-    dir_h_get_files_wt(d, path);
+    dir_h_get_files_wt(d, path, thread_args->check);
 
     free(thread_args);
     return NULL;
 }
 
-void dir_h_get_files_wt(dir_h* d, char path[MAX_WORD_SIZE]) {
+void dir_h_get_files_wt(dir_h* d, char path[MAX_WORD_SIZE], bool check) {
     DIR* dir = opendir(path);
     if (dir == NULL) {
         printf("failed to open folder `%s`.\n", path);
@@ -84,10 +84,11 @@ void dir_h_get_files_wt(dir_h* d, char path[MAX_WORD_SIZE]) {
 
         if (is_regular_file(full_path)) {
             pthread_mutex_lock(&d->lock);
-            dict_h_add_word(d->files_dict, full_path, false);
+            dict_h_add_word(d->files_dict, full_path, check);
             pthread_mutex_unlock(&d->lock);
         } else {
             search_thread_args_h *thread_args = malloc(sizeof(search_thread_args_h));
+            thread_args->check = check;
             snprintf(thread_args->path, MAX_WORD_SIZE, "%s/%s", path, fReaded->d_name);
             thread_args->dict = d;
 
@@ -97,7 +98,7 @@ void dir_h_get_files_wt(dir_h* d, char path[MAX_WORD_SIZE]) {
     }
     closedir(dir);
 
-    // Wait for all child threads to finish
+
     for (int i = 0; i < thread_count; i++) {
         pthread_join(threads[i], NULL);
     }
