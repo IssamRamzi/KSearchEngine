@@ -4,8 +4,8 @@
 #pragma once
 #ifndef INDEXATION_H
 #define INDEXATION_H
+#include "data/index_matrix.h"
 #include "io/dir_h.h"
-#include "io/dir_s.h"
 #include "io/dir_s.h"
 
 dir_h *index_directory_h(char[MAX_WORD_SIZE]);
@@ -13,6 +13,6 @@ dir_s *index_directory_s(char[MAX_WORD_SIZE]);
 
 dict_h *index_dictionnary_from_dir_h(dir_h* directory);
 dict_h *index_dictionnary_from_dir_s(dir_s* directory);
-
+void index(dict_s *files, dict_h *words, index_matrix *matrix);
 
 #endif //INDEXATION_H

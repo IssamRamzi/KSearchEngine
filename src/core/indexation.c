@@ -4,6 +4,7 @@
 
 #include "core/indexation.h"
 
+#include "data/index_matrix.h"
 #include "io/dir_s.h"
 #include "io/file_reader_s.h"
 
@@ -130,4 +131,44 @@ dict_h* index_dictionnary_from_dir_s(dir_s* directory) {
 //     printf("Words : %d, indexed in %ld\n", words->size, (end_time - start_time) * 1000 / CLOCKS_PER_SEC);
 //     return words;
 // }
+void normalize_path(char* path) {
+    for (int i = 0; path[i]; i++) {
+        if (path[i] == '/') {
+            path[i] = '\\';
+        }
+    }
+}
 
+void index(dict_s *files, dict_h *words, index_matrix *matrix) {
+    printf("Number of files: %d\n", files->size);
+    for (int i = 0; i < 10; i++) { // Afficher les 10 premiers chemins
+        if (i < files->size) {
+            printf("File %d: %s\n", i, files->dict[i]);
+        }
+    }
+    for (int i = 0; i < files->size; i++) {
+        char* file = files->dict[i];
+        normalize_path(file);
+        fr_init(file);
+        fr_start();
+
+        while (!fr_end()) {
+            fr_advance();
+            if (strlen(fr->mot) > 0) { // index
+                dict_h_add_word(words, fr->mot, false);
+                int idx = dict_h_get_index(words, fr->mot);
+                matrix_increment(matrix, i, idx);
+            }
+            while (!fr_end() && !is_letter(fr->c)) {
+                fr->c = fgetc(fr->file);
+            }
+        }
+        if (fr != NULL) {
+            fclose(fr->file);
+            free(fr->mot);
+            free(fr);
+            fr = NULL;
+        }
+    }
+    matrix_display(matrix, 10);
+}

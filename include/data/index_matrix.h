@@ -22,7 +22,7 @@ void matrix_seti(index_matrix* matrix, int ndoc, int nterm, int val);
 void matrix_setf(index_matrix* matrix, int ndoc, int nterm, float val);
 void matrix_sets(index_matrix* matrix, int ndoc, int nterm, char val[MAX_WORD_SIZE]);
 
-void display_matrix(index_matrix* matrix);
+void matrix_display(index_matrix* matrix, int max);
 
 
 

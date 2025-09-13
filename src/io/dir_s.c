@@ -95,7 +95,6 @@ void dir_s_get_files_wt(dir_s* d, char path[MAX_WORD_SIZE], bool check) {
 }
 
 
-
 void dir_s_get_files(dir_s* d, char path[MAX_WORD_SIZE], bool check) {
     DIR* dir = opendir(path);
     if (dir == NULL) {

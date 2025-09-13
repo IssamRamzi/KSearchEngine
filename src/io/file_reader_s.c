@@ -5,11 +5,12 @@
 #include "io/file_reader_s.h"
 #include "core/utils.h"
 
-FILE* init(char path[]) {
+FILE* fr_init(char path[]) {
     if (fr != NULL) {
         fclose(fr->file);
         free(fr->mot);
         free(fr);
+        fr = NULL;
     }
 
     fr = malloc(sizeof(file_reader));
@@ -21,7 +22,9 @@ FILE* init(char path[]) {
     fr->file = fopen(path, "r");
     if (fr->file == NULL) {
         printf("Failed to open: %s\n", path);
+        perror("");
         free(fr);
+        fr = NULL;
         return NULL;
     }
 
@@ -30,27 +33,36 @@ FILE* init(char path[]) {
         perror("malloc");
         fclose(fr->file);
         free(fr);
+        fr = NULL;
         exit(EXIT_FAILURE);
     }
     fr->c = '\0';
     return fr->file;
 }
 
-void start() {
+void fr_start() {
+    if (fr == NULL || fr->file == NULL) {
+        fprintf(stderr, "fr_start : file_reader or file is not initialized\n");
+        return;
+    }
     fr->c = fgetc(fr->file);
     while (fr->c != EOF && !isalpha((unsigned char)fr->c)) {
         fr->c = fgetc(fr->file);
     }
 }
 
-void advance() {
+void fr_advance() {
     int i = 0;
     fr->mot[0] = '\0';
     while (fr->c != EOF && isalpha((unsigned char)fr->c) && i < MAX_WORD_SIZE - 1) {
         fr->mot[i++] = (char)tolower((unsigned char)fr->c);
-        fr->c = fgetc(fr->file);
+        fr->c = (char)fgetc(fr->file);
     }
     fr->mot[i] = '\0';
+}
+
+bool fr_end() {
+    return fr == NULL || fr->c == EOF || (fr->mot != NULL && fr->mot[0] == '\0');
 }
 
 char* fr_read(char path[]) {
@@ -78,11 +90,11 @@ char* fr_read(char path[]) {
 }
 
 void fr_append_to_dict_s(char path[], dict_s *word_d) {
-    if (init(path) == NULL) return;
-    start();
+    if (fr_init(path) == NULL) return;
+    fr_start();
 
     while (fr->c != EOF) {
-        advance();
+        fr_advance();
         if (strlen(fr->mot) > 0) {
             // printf("Adding word: '%s' from pos %ld\n", fr->mot, ftell(fr->file));
             dict_s_add_word(word_d, fr->mot, true);
@@ -99,11 +111,11 @@ void fr_append_to_dict_s(char path[], dict_s *word_d) {
 }
 
 void fr_append_to_dict_h(char path[], dict_h *word_d) {
-    if (init(path) == NULL) return;
-    start();
+    if (fr_init(path) == NULL) return;
+    fr_start();
 
     while (fr->c != EOF) {
-        advance();
+        fr_advance();
         if (strlen(fr->mot) > 0) {
             // printf("Adding word: '%s' from pos %ld\n", fr->mot, ftell(fr->file));
             dict_h_add_word(word_d, fr->mot, true);
@@ -119,3 +131,23 @@ void fr_append_to_dict_h(char path[], dict_h *word_d) {
     fr = NULL;
 }
 
+void fr_append_to_dict_h_and_matrix(char path[], dict_h *word_d, index_matrix* matrix, int ndoc, int nterm) {
+    if (fr_init(path) == NULL) return;
+    fr_start();
+
+    while (fr->c != EOF) {
+        fr_advance();
+        if (strlen(fr->mot) > 0) {
+            dict_h_add_word(word_d, fr->mot, true);
+            matrix_increment(matrix, ndoc, nterm);
+        }
+        while (fr->c != EOF && !isalpha((unsigned char)fr->c)) {
+            fr->c = fgetc(fr->file);
+        }
+    }
+
+    fclose(fr->file);
+    free(fr->mot);
+    free(fr);
+    fr = NULL;
+}

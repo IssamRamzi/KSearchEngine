@@ -18,7 +18,9 @@ typedef struct cell{
 } cell_t;
 
 
-cell_t *cell_create(void* value, int index, struct cell *next, DATA_TYPE type);
+cell_t *cell_create_i(int value, int index, struct cell *next);
+cell_t *cell_create_f(float value, int index, struct cell *next);
+cell_t *cell_create_s(char value[MAX_WORD_SIZE], int index, struct cell *next);
 void cell_free(cell_t *cell);
 void cell_print(cell_t* cell);
 

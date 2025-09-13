@@ -5,6 +5,8 @@
 
 #include <string.h>
 
+#include "data/hash_table.h"
+
 index_matrix *matrix_create(int doc_number) {
     index_matrix *matrix = malloc(sizeof(index_matrix));
     if (matrix == NULL) {
@@ -14,7 +16,7 @@ index_matrix *matrix_create(int doc_number) {
     matrix->size = doc_number + 1;
     matrix->heads = calloc(matrix->size, sizeof(cell_t *));
     for (int i = 0; i < matrix->size; i++) {
-        matrix->heads[i] = cell_create(0, 0, NULL, FLOAT);
+        matrix->heads[i] = cell_create_f(0, 0, NULL);
     }
     return matrix;
 }
@@ -56,7 +58,7 @@ index_matrix *matrix_load(char *path) {
         cell_t *head;
 
         while (token != NULL) {
-            void *value;
+            float value;
             int idx;
 
             if (sscanf(token, "%f ", &value) != 1) {
@@ -74,7 +76,7 @@ index_matrix *matrix_load(char *path) {
             }
 
 
-            cell_t *cell = cell_create(value, idx, NULL, FLOAT);
+            cell_t *cell = cell_create_f(value, idx, NULL);
         }
     }
     return matrix;
@@ -133,7 +135,7 @@ void *matrix_val(index_matrix *matrix, int ndoc, int nterm) {
     return NULL;
 }
 
-void matrix_set(index_matrix *matrix, int ndoc, int nterm, int val) {
+void matrix_set(index_matrix *matrix, int ndoc, int nterm, float val) {
     if (matrix == NULL || ndoc < 0 || ndoc > matrix->size || nterm < 0) return;
     cell_t *prev = NULL;
     cell_t *head = matrix->heads[ndoc];
@@ -156,7 +158,7 @@ void matrix_set(index_matrix *matrix, int ndoc, int nterm, int val) {
                 return;
         }
     }else {
-        cell_t* new_cell = cell_create(val, nterm, head, head->cell_type);
+        cell_t* new_cell = cell_create_f(val, nterm, head);
         if (prev == NULL)
             matrix->heads[ndoc] = new_cell;
         else
@@ -187,10 +189,21 @@ void matrix_increment(index_matrix *matrix, int ndoc, int nterm) {
                 return;
         }
     }else {
-        cell_t* new_cell = cell_create(1, nterm, head, head->cell_type);
+        cell_t* new_cell = cell_create_f(1, nterm, head);
         if (prev == NULL)
             matrix->heads[ndoc] = new_cell;
         else
             prev->next = new_cell;
+    }
+}
+
+void matrix_display(index_matrix* matrix, int max) {
+    for (int i = 0; i < max; i++) {
+        cell_t *cell = matrix->heads[i];
+        while (cell) {
+            printf("%f ", cell->value.val_f);
+            cell = cell->next;
+        }
+        printf("\n");
     }
 }

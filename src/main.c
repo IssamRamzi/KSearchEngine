@@ -1,12 +1,8 @@
-#include <stdio.h>
-#include "io/dir_s.h"
-
-#include <time.h>
+#include <locale.h>
 
 #include "core/indexation.h"
-#include "io/dir_h.h"
+#include "core/utils.h"
 #include "data/index_matrix.h"
-#include "io/file_reader_s.h"
 
 
 int main(int argc, char** argv) {
@@ -15,33 +11,32 @@ int main(int argc, char** argv) {
     /*
         ! ARGs
             - Arg [1] : Corpus Folder
-            - Arg [2] : Filename for words dictionnary (loads if exists)
-            - Arg [3] : Filename for index matrix 
+            - Arg [2] : Filename for files dictionnary (loads if exists)
+            - Arg [3] : Filename for words dictionnary (loads if exists)
+            - Arg [4] : Filename for index matrix 
             
     */
 
-    if (argc < 2) {
+    if (argc < 4) {
         printf("Not enough arguments\n");
         getchar();
         return -1;
     }
     printf("Corpus Folder : %s\n", argv[1]);
-    // dir_s *directory = index_directory_s(argv[1]);
-    // dict_s_save(directory->files_dict, "\n", "Results/dic_ssss.txt");
-    // dict_h* words = index_dictionnary_from_dir_s(directory);
-    // dict_h_save(words,"\n", "dic_h.txt");
+    // dir_s* dir = dir_s_create(argv[1]);
+    // dir_s_get_files_wt(dir, argv[1], false);
+    // dict_s_save(dir->files_dict, "\n", "../Results/files_small.txt");
 
-    // dict_s* dict = dict_s_load("\n", "dic_s.txt", false);;
-    // dict_s_load("\n", "dic_s.txt", false);
 
-    // dict_s_display(dict, "");
+    // loading dicts
+    dict_s *files = dict_s_load("\n", "../Results/files_small.txt", false);
+    // dict_h *words = dict_h_load("\n", argv[3]);
 
-    // index_matrix* matrix;
-    // matrix = matrix_create(directory_h->files_dict->size);
 
-    dict_s *files = dict_s_load("\n", "Results/files.txt", false);
-    dict_h *words = dict_h_load("\n", "Results/words.txt");
-
+    // matrix
+    dict_h* words = dict_h_create(300000);
+    index_matrix* matrix = matrix_create(files->size);
+    index(files, words, matrix);
 
     getchar();
 

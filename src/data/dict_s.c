@@ -145,7 +145,7 @@ dict_s* dict_s_load(char* end, char* path, bool check) {
 
     long size = strtol(buffer, &endptr, 10); // str_int, endptr, base
     dict_s* d = dict_s_create((int)size);
-    printf("Loading dict_s with a size of %d\n",size);
+    // printf("Loading dict_s with a size of %d\n",size);
 
     while (fgets(buffer, MAX_WORD_SIZE, f) != NULL) {
         dict_s_add_word(d, buffer, check);

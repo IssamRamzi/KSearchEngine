@@ -13,6 +13,7 @@
 
 #include "../data/dict_s.h"
 #include "data/dict_h.h"
+#include "data/index_matrix.h"
 
 
 typedef struct {
@@ -24,8 +25,15 @@ typedef struct {
 static file_reader* fr = NULL;
 extern bool is_letter(char c);
 
+FILE* fr_init(char path[]);
+void fr_advance();
+void fr_start();
+bool fr_end();
+
+
 char* fr_read(char path[]);
 void fr_append_to_dict_s(char path[], dict_s *word_d);
 void fr_append_to_dict_h(char path[], dict_h *word_d);
+// void fr_append_to_dict_h_and_matrix(char path[], dict_h *word_d, index_matrix* matrix);
 
 #endif // FILEREADER_H
