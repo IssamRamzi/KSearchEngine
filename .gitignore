@@ -1,8 +1,12 @@
 /.vs
+/.vscode
 /build
 /cmake-build-debug
 /out
+/Results
 .idea
 notes.md
 todos.md
 Basic Local Search Engine.md
+build.bat
+run.bat

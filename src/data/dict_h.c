@@ -126,6 +126,7 @@ dict_h* dict_h_load(char* end, char* path){
     printf("Loading dict_s with a maxsize of %d\n",maxsize);
 
     while (fgets(buffer, MAX_WORD_SIZE, f) != NULL) {
+        buffer[strcspn(buffer, "\n")] = '\0';
         dict_h_add_word(d, buffer, false);
     }
     end_time = clock();

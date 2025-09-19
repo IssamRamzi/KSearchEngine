@@ -5,6 +5,8 @@
 
 #include <stdlib.h>
 
+// TODO : needs fix
+
 char* get_string_log_level(LOG_LEVEL level) {
     switch (level) {
         case DEBUG: return "[ DEBUG ]";

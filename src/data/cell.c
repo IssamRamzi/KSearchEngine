@@ -18,7 +18,7 @@ cell_t *cell_create_f(float value, int index, struct cell *next) {
         perror("create_cell_i :");
         return NULL;
     }
-    cell->cell_type = INTEGER;
+    cell->cell_type = FLOAT;
     cell->index = index;
     cell->next = next;
     cell->value.val_f = value;
@@ -30,7 +30,7 @@ cell_t *cell_create_s(char value[MAX_WORD_SIZE], int index, struct cell *next) {
         perror("create_cell_i :");
         return NULL;
     }
-    cell->cell_type = INTEGER;
+    cell->cell_type = STRING;
     cell->index = index;
     cell->next = next;
     strncpy(cell->value.val_s, value, MAX_WORD_SIZE - 1);

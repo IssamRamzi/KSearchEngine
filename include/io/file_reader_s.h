@@ -22,18 +22,18 @@ typedef struct {
     char c;
 } file_reader;
 
-static file_reader* fr = NULL;
 extern bool is_letter(char c);
 
-FILE* fr_init(char path[]);
-void fr_advance();
-void fr_start();
-bool fr_end();
+file_reader* fr_init(char path[]);
+void fr_free(file_reader* fr);
+void fr_advance(file_reader* fr);
+void fr_start(file_reader* fr);
+bool fr_end(file_reader* fr);
 
 
 char* fr_read(char path[]);
 void fr_append_to_dict_s(char path[], dict_s *word_d);
 void fr_append_to_dict_h(char path[], dict_h *word_d);
 // void fr_append_to_dict_h_and_matrix(char path[], dict_h *word_d, index_matrix* matrix);
-
+void fr_append_to_dict_h_and_matrix(char path[], dict_h *word_d, index_matrix* matrix, int doc_index);
 #endif // FILEREADER_H

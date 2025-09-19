@@ -148,6 +148,7 @@ dict_s* dict_s_load(char* end, char* path, bool check) {
     // printf("Loading dict_s with a size of %d\n",size);
 
     while (fgets(buffer, MAX_WORD_SIZE, f) != NULL) {
+        buffer[strcspn(buffer, "\n")] = '\0';
         dict_s_add_word(d, buffer, check);
     }
     end_time = clock();

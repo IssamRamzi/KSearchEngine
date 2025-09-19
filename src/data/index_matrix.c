@@ -4,7 +4,7 @@
 #include "data/index_matrix.h"
 
 #include <string.h>
-
+#include <stdlib.h>
 #include "data/hash_table.h"
 
 index_matrix *matrix_create(int doc_number) {
@@ -13,19 +13,28 @@ index_matrix *matrix_create(int doc_number) {
         perror("create_matrix : ");
         return NULL;
     }
-    matrix->size = doc_number + 1;
+    matrix->size = doc_number;
     matrix->heads = calloc(matrix->size, sizeof(cell_t *));
-    for (int i = 0; i < matrix->size; i++) {
-        matrix->heads[i] = cell_create_f(0, 0, NULL);
-    }
+
     return matrix;
 }
 
+void matrix_seti(index_matrix* matrix, int ndoc, int nterm, int val) {
+
+}
+
+void matrix_setf(index_matrix* matrix, int ndoc, int nterm, float val) {
+
+}
+
+void matrix_sets(index_matrix* matrix, int ndoc, int nterm, char val[MAX_WORD_SIZE]) {
+
+}
+
 index_matrix *matrix_load(char *path) {
-    // TODO
     FILE *f = fopen(path, "r");
     if (f == NULL) {
-        perror("load_matrix : ");
+        perror("load_matrix");
         return NULL;
     }
 
@@ -36,69 +45,91 @@ index_matrix *matrix_load(char *path) {
         return NULL;
     }
 
-    index_matrix *matrix = matrix_create(size - 1);
+    index_matrix *matrix = matrix_create(size);
     if (matrix == NULL) {
-        perror("load_matrix :");
+        perror("load_matrix");
+        fclose(f);
         return NULL;
     }
 
-    int bufSize = 2048;
-    char line[bufSize];
-    for (int i = 0; i < matrix->size; i++) {
-        if (fgets(line, bufSize, f) == NULL) {
-            fprintf(stderr, "load_matrix : falied to read row\n");
+    int buffSize = 16384;
+    char *line = malloc(buffSize * sizeof(char));
+    if (line == NULL) {
+        perror("load_matrix");
+        matrix_free(matrix);
+        fclose(f);
+        free(line);
+        return NULL;
+    }
+
+    for (int i = 0; i < size; i++) {
+        if (fgets(line, buffSize, f)) {
+            cell_t *head = NULL;
+            cell_t *tail = NULL;
+            char *token = strtok(line, " \n");
+            int last_index = -1;
+
+            while (token != NULL) {
+                double value;
+                int index;
+                if (sscanf(token, "%lf:%d", &value, &index) == 2) {
+                    if (index >= 0) {
+                        if (index <= last_index) {
+                            fprintf(stderr, "load_matrix: indices must be in ascending order in line %d\n", i + 2);
+                            matrix_free(matrix);
+                            free(line);
+                            fclose(f);
+                            return NULL;
+                        }
+                        cell_t *new_cell = cell_create_f((float)value, index, NULL);
+                        if (new_cell == NULL) {
+                            fprintf(stderr, "load_matrix: failed to create cell in line %d\n", i + 2);
+                            matrix_free(matrix);
+                            free(line);
+                            fclose(f);
+                            return NULL;
+                        }
+                        if (tail == NULL) {
+                            matrix->heads[i] = new_cell;
+                            head = new_cell;
+                            tail = new_cell;
+                        } else {
+                            tail->next = new_cell;
+                            tail = new_cell;
+                        }
+                        last_index = index;
+                    } else {
+                        fprintf(stderr, "load_matrix: invalid index %d in line %d\n", index, i + 2);
+                        matrix_free(matrix);
+                        free(line);
+                        fclose(f);
+                        return NULL;
+                    }
+                } else {
+                    fprintf(stderr, "load_matrix: invalid format in line %d\n", i + 2);
+                    matrix_free(matrix);
+                    free(line);
+                    fclose(f);
+                    return NULL;
+                }
+                token = strtok(NULL, " \n");
+            }
+        } else {
+            fprintf(stderr, "load_matrix: failed to read line %d\n", i + 2);
             matrix_free(matrix);
+            free(line);
             fclose(f);
             return NULL;
         }
-
-        char *token = strtok(line, ' \n');
-
-        cell_t *prev;
-        cell_t *head;
-
-        while (token != NULL) {
-            float value;
-            int idx;
-
-            if (sscanf(token, "%f ", &value) != 1) {
-                fprintf(stderr, "load_matrix : falied to read values\n");
-                matrix_free(matrix);
-                fclose(f);
-                return NULL;
-            }
-
-            if (sscanf(token, "%d ", &idx) != 1) {
-                fprintf(stderr, "load_matrix : falied to read index\n");
-                matrix_free(matrix);
-                fclose(f);
-                return NULL;
-            }
-
-
-            cell_t *cell = cell_create_f(value, idx, NULL);
-        }
     }
+
+    printf("Matrix Loaded successfully !\n");
+    matrix_save(matrix, "test_load.txt");
+    free(line);
+    fclose(f);
     return matrix;
 }
 
-void matrix_save(index_matrix *matrix, char *path) {
-    // TODO : others DATA_TYPES
-    FILE *f = fopen(path, "w");
-    if (f == NULL) {
-        perror("save_matrix : ");
-        return;
-    }
-    fprintf(f, "%d\n", matrix->size);
-    for (int i = 0; i < matrix->size; i++) {
-        cell_t *cell = matrix->heads[i];
-        while (cell) {
-            fprintf(f, "%.2f:%d ", cell->value, cell->index);
-            cell = cell->next;
-        }
-        fprintf(f, "\n");
-    }
-}
 
 void matrix_free(index_matrix *matrix) {
     if (matrix == NULL) return;
@@ -167,17 +198,22 @@ void matrix_set(index_matrix *matrix, int ndoc, int nterm, float val) {
 }
 
 void matrix_increment(index_matrix *matrix, int ndoc, int nterm) {
-    if (matrix == NULL || ndoc < 0 || ndoc > matrix->size || nterm < 0) return;
+    if (matrix == NULL || ndoc < 0 || ndoc >= matrix->size || nterm < 0) return;
+
     cell_t *prev = NULL;
     cell_t *head = matrix->heads[ndoc];
+
+    if (head == NULL) {
+        matrix->heads[ndoc] = cell_create_f(1.0f, nterm, NULL);
+        return;
+    }
 
     while (head != NULL && head->index < nterm) {
         prev = head;
         head = head->next;
     }
 
-
-    if (head->index == nterm) {
+    if (head != NULL && head->index == nterm) {
         switch (head->cell_type) {
             case FLOAT:
                 head->value.val_f += 1.0f;
@@ -188,8 +224,9 @@ void matrix_increment(index_matrix *matrix, int ndoc, int nterm) {
             default:
                 return;
         }
-    }else {
-        cell_t* new_cell = cell_create_f(1, nterm, head);
+    }
+    else {
+        cell_t* new_cell = cell_create_f(1.0f, nterm, head);
         if (prev == NULL)
             matrix->heads[ndoc] = new_cell;
         else
@@ -201,9 +238,27 @@ void matrix_display(index_matrix* matrix, int max) {
     for (int i = 0; i < max; i++) {
         cell_t *cell = matrix->heads[i];
         while (cell) {
-            printf("%f ", cell->value.val_f);
+            printf("%.1f ", cell->value.val_f);
             cell = cell->next;
         }
         printf("\n");
     }
+}
+
+void matrix_save(index_matrix *matrix, char *path) {
+    FILE *f = fopen(path, "w");
+    if (f == NULL) {
+        perror("save_matrix : ");
+        return;
+    }
+    fprintf(f, "%d\n", matrix->size);
+    for (int i = 0; i < matrix->size; i++) {
+        cell_t *cell = matrix->heads[i];
+        while (cell) {
+            fprintf(f, "%.2f:%d ", cell->value.val_f, cell->index);
+            cell = cell->next;
+        }
+        fprintf(f, "\n");
+    }
+    fflush(f);
 }

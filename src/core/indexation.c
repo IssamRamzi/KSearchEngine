@@ -52,6 +52,7 @@ dict_h *index_dictionnary_from_dir_h(dir_h* directory) {
     for (int i = 0; i < directory->files_dict->nodes_count; i++) {
         hash_node_s *node = directory->files_dict->nodes[i];
         while (node) {
+
             fr_append_to_dict_h(node->value, words);
         }
     }
@@ -119,18 +120,6 @@ dict_h* index_dictionnary_from_dir_s(dir_s* directory) {
     return words;
 }
 
-// dict_h *index_dictionnary_from_dir_s(dir_s* directory) {
-//     clock_t start_time, end_time;
-//     start_time = clock();
-//     dict_h* words = dict_h_create(300000);
-//     for (int i = 0; i < directory->files_dict->size; i++) {
-//         char *str = directory->files_dict->dict[i];
-//         fr_append_to_dict_h(str, words);
-//     }
-//     end_time = clock();
-//     printf("Words : %d, indexed in %ld\n", words->size, (end_time - start_time) * 1000 / CLOCKS_PER_SEC);
-//     return words;
-// }
 void normalize_path(char* path) {
     for (int i = 0; path[i]; i++) {
         if (path[i] == '/') {
@@ -141,34 +130,58 @@ void normalize_path(char* path) {
 
 void index(dict_s *files, dict_h *words, index_matrix *matrix) {
     printf("Number of files: %d\n", files->size);
-    for (int i = 0; i < 10; i++) { // Afficher les 10 premiers chemins
-        if (i < files->size) {
-            printf("File %d: %s\n", i, files->dict[i]);
-        }
-    }
-    for (int i = 0; i < files->size; i++) {
-        char* file = files->dict[i];
-        normalize_path(file);
-        fr_init(file);
-        fr_start();
 
-        while (!fr_end()) {
-            fr_advance();
-            if (strlen(fr->mot) > 0) { // index
+    for (int i = 0; i < 10 && i < files->size; i++) {
+        printf("File %d: %s\n", i, files->dict[i]);
+    }
+
+    clock_t start_time = clock();
+    int processed_files = 0;
+    int skipped_files = 0;
+
+    for (int i = 0; i < files->size; i++) {
+        char* file_path = files->dict[i];
+
+        file_path[strcspn(file_path, "\n\r")] = '\0';
+
+        file_reader* fr = fr_init(file_path);
+        if (fr == NULL) {
+            printf("Skipping file %d (failed to open): %s\n", i, file_path);
+            skipped_files++;
+            continue;
+        }
+
+        fr_start(fr);
+
+        while (!fr_end(fr)) {
+            fr_advance(fr);
+
+            if (strlen(fr->mot) > 0) {
                 dict_h_add_word(words, fr->mot, false);
-                int idx = dict_h_get_index(words, fr->mot);
-                matrix_increment(matrix, i, idx);
+                int word_idx = dict_h_get_index(words, fr->mot);
+                matrix_increment(matrix, i, word_idx);
             }
-            while (!fr_end() && !is_letter(fr->c)) {
+
+            while (!fr_end(fr) && !isalpha((unsigned char)fr->c)) {
                 fr->c = fgetc(fr->file);
             }
         }
-        if (fr != NULL) {
-            fclose(fr->file);
-            free(fr->mot);
-            free(fr);
-            fr = NULL;
+
+        fr_free(fr);
+        processed_files++;
+
+        if ((i + 1) % 100 == 0) {
+            printf("Processed %d/%d files...\n", i + 1, files->size);
         }
     }
-    matrix_display(matrix, 10);
+
+    clock_t end_time = clock();
+
+    printf("\n=== Indexing completed ===\n");
+    printf("Total files: %d\n", files->size);
+    printf("Processed files: %d\n", processed_files);
+    printf("Skipped files: %d\n", skipped_files);
+    printf("Dictionary size: %d words\n", words->size);
+    printf("Processing time: %ldms\n", (end_time - start_time) * 1000 / CLOCKS_PER_SEC);
+
 }
